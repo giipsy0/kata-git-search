@@ -1,16 +1,11 @@
-let app = document.getElementById('app');
-
-let searchLine = createElement('div', 'search-line');
-let searchInput = createElement('input', 'search-input');
+const app = document.getElementById('app');
+const searchLine = createElement('div', 'search-line');
+const searchInput = createElement('input', 'search-input');
+const autocomBox = createElement('ul', 'autocom-box');
+const main = createElement('div', 'main');
 searchLine.append(searchInput);
-
-let autocomBox = createElement('ul', 'autocom-box');
 searchLine.append(autocomBox);
-
 app.append(searchLine);
-
-let main = createElement('div', 'main');
-
 app.append(main);
 
 function createElement (elementTag, elementClass) {
@@ -31,16 +26,19 @@ function debounce (fn, debounceTime) {
     }
 }
 
+async function getResponse() {
+    return await fetch(`https://api.github.com/search/repositories?per_page=5&q=${searchInput.value}&sort=stars`).then((response)=>{     
+        response.json().then((response) => {
+        response.items.forEach((data) => showSuggestion(data));
+    })
+});
+}
 
-async function searchRep() {
+async function searchRepopsitory() {
     try {
         if(searchInput.value) {
             clear();
-            await fetch(`https://api.github.com/search/repositories?per_page=5&q=${searchInput.value}&sort=stars`).then((response)=>{     
-            response.json().then((response) => {
-            response.items.forEach((data) => showSuggestion(data));
-        })
-      });
+            await getResponse();
     } else {
       clear();        
     }
@@ -55,13 +53,14 @@ function showSuggestion(data) {
         autocomBox.innerHTML = "";
         searchInput.value = "";
   
-        showRep(data);
+        showRepository(data);
     });
     suggestion.innerHTML = `<span>${data.name}</span>`;
-    autocomBox.append(suggestion);
+    autocomBox.insertAdjacentElement('afterbegin', suggestion);
+    
 }
 
-function showRep(data) {
+function showRepository(data) {
     const rep = createElement("li", "rep");
     const btn = createElement("div", "btn");
   
@@ -78,11 +77,11 @@ function showRep(data) {
     <span>Owner: ${data.owner.login}</span>
     <span>Stars: ${data.stargazers_count}</span>
     </span>`;
-    rep.append(btn);
-    main.prepend(rep);
+    rep.insertAdjacentElement('afterbegin', btn);
+    main.insertAdjacentElement('afterbegin', rep);
 }
 
-searchInput.addEventListener('keyup', debounce(searchRep, 350));
+searchInput.addEventListener('keyup', debounce(searchRepopsitory, 350));
 
 function clear() {
     autocomBox.innerHTML = "";
